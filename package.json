@@ -1,0 +1,40 @@
+{
+  "name": "paintplus",
+  "productName": "PaintPlus",
+  "version": "1.0.0",
+  "description": "PaintPlus – jednoduchý kreslicí program jako Malování, ale s vrstvami, symetrií, filtry a dalšími funkcemi.",
+  "main": "main.js",
+  "author": "koki26",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "icon": "node tools/make-icon.js",
+    "dist": "electron-builder --win --x64 --publish never"
+  },
+  "devDependencies": {
+    "electron": "^39.0.0",
+    "electron-builder": "^26.0.0"
+  },
+  "build": {
+    "appId": "cz.koki26.paintplus",
+    "productName": "PaintPlus",
+    "directories": { "output": "dist", "buildResources": "build" },
+    "files": ["main.js", "preload.js", "src/**/*", "build/icon.png", "package.json"],
+    "fileAssociations": [
+      { "ext": ["png", "jpg", "jpeg", "bmp", "gif", "webp"], "name": "Obrázek", "role": "Editor" }
+    ],
+    "win": {
+      "target": [{ "target": "nsis", "arch": ["x64"] }],
+      "icon": "build/icon.png",
+      "artifactName": "PaintPlus-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": true,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": false,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "runAfterFinish": true
+    }
+  }
+}

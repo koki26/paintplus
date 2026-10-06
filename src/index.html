@@ -1,0 +1,290 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data: blob:; style-src 'self' 'unsafe-inline'; script-src 'self'">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>PaintPlus</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<header id="topbar">
+  <div class="brand">PaintPlus</div>
+
+  <nav id="menus">
+    <div class="menu">
+      <button class="menu-btn">Soubor</button>
+      <div class="menu-list">
+        <button data-action="new">Nový… <kbd>Ctrl+N</kbd></button>
+        <button data-action="open">Otevřít… <kbd>Ctrl+O</kbd></button>
+        <hr>
+        <button data-action="save-png">Uložit jako PNG <kbd>Ctrl+S</kbd></button>
+        <button data-action="save-jpg">Uložit jako JPG</button>
+        <button data-action="save-webp">Uložit jako WebP</button>
+        <hr>
+        <button data-action="copy-all">Kopírovat celý obrázek do schránky</button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="menu-btn">Úpravy</button>
+      <div class="menu-list">
+        <button data-action="undo">Zpět <kbd>Ctrl+Z</kbd></button>
+        <button data-action="redo">Vpřed <kbd>Ctrl+Y</kbd></button>
+        <hr>
+        <button data-action="cut">Vyjmout <kbd>Ctrl+X</kbd></button>
+        <button data-action="copy">Kopírovat <kbd>Ctrl+C</kbd></button>
+        <button data-action="paste">Vložit <kbd>Ctrl+V</kbd></button>
+        <hr>
+        <button data-action="select-all">Vybrat vše <kbd>Ctrl+A</kbd></button>
+        <button data-action="deselect">Zrušit výběr <kbd>Esc</kbd></button>
+        <button data-action="delete-sel">Smazat výběr <kbd>Del</kbd></button>
+        <button data-action="crop-sel">Oříznout na výběr</button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="menu-btn">Obraz</button>
+      <div class="menu-list">
+        <button data-action="resize">Změnit velikost…</button>
+        <hr>
+        <button data-action="flip-h">Překlopit vodorovně</button>
+        <button data-action="flip-v">Překlopit svisle</button>
+        <button data-action="rot-cw">Otočit o 90° doprava</button>
+        <button data-action="rot-ccw">Otočit o 90° doleva</button>
+        <button data-action="rot-180">Otočit o 180°</button>
+        <hr>
+        <button data-action="fill-layer">Vyplnit vrstvu primární barvou</button>
+        <button data-action="clear-layer">Vymazat vrstvu</button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="menu-btn">Filtry</button>
+      <div class="menu-list">
+        <button data-filter="grayscale(1)">Černobílý</button>
+        <button data-filter="invert(1)">Negativ</button>
+        <button data-filter="sepia(1)">Sépie</button>
+        <hr>
+        <button data-filter="brightness(1.2)">Světlejší</button>
+        <button data-filter="brightness(0.8)">Tmavší</button>
+        <button data-filter="contrast(1.3)">Větší kontrast</button>
+        <button data-filter="contrast(0.75)">Menší kontrast</button>
+        <button data-filter="saturate(1.6)">Sytější barvy</button>
+        <button data-filter="saturate(0.5)">Méně sytých barev</button>
+        <button data-filter="hue-rotate(60deg)">Posun odstínu</button>
+        <hr>
+        <button data-filter="blur(2px)">Rozostřit</button>
+        <button data-filter="blur(6px)">Silně rozostřit</button>
+        <button data-action="pixelate">Pixelizace</button>
+      </div>
+    </div>
+    <div class="menu">
+      <button class="menu-btn">Zobrazení</button>
+      <div class="menu-list">
+        <button data-action="zoom-in">Přiblížit <kbd>+</kbd></button>
+        <button data-action="zoom-out">Oddálit <kbd>-</kbd></button>
+        <button data-action="zoom-100">Skutečná velikost <kbd>Ctrl+1</kbd></button>
+        <button data-action="zoom-fit">Přizpůsobit oknu <kbd>Ctrl+0</kbd></button>
+        <hr>
+        <button data-action="toggle-grid">Mřížka <kbd>Ctrl+G</kbd></button>
+        <hr>
+        <button data-action="help">Klávesové zkratky <kbd>F1</kbd></button>
+      </div>
+    </div>
+  </nav>
+
+  <div class="spacer"></div>
+  <button class="icon-btn" data-action="undo" title="Zpět (Ctrl+Z)" id="btnUndo"></button>
+  <button class="icon-btn" data-action="redo" title="Vpřed (Ctrl+Y)" id="btnRedo"></button>
+  <span class="sep"></span>
+  <button class="icon-btn" data-action="zoom-out" title="Oddálit"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+  <button id="zoomLabel" data-action="zoom-fit" title="Přizpůsobit oknu">100 %</button>
+  <button class="icon-btn" data-action="zoom-in" title="Přiblížit"><svg viewBox="0 0 24 24"><path d="M5 12h14M12 5v14"/></svg></button>
+</header>
+
+<div id="main">
+  <aside id="tools"></aside>
+
+  <main id="workspace">
+    <div id="stage">
+      <div id="layersEl"></div>
+      <canvas id="overlay"></canvas>
+      <div id="gridLayer"></div>
+      <div id="selBox"></div>
+      <textarea id="textInput" wrap="off" spellcheck="false"></textarea>
+    </div>
+  </main>
+
+  <aside id="side">
+    <section class="panel">
+      <h3>Barvy</h3>
+      <div class="colors">
+        <div class="swatches">
+          <label class="sw sw2" title="Sekundární barva (pravé tlačítko myši)"><input type="color" id="color2" value="#ffffff"></label>
+          <label class="sw sw1" title="Primární barva (levé tlačítko myši)"><input type="color" id="color1" value="#000000"></label>
+          <button id="swapColors" class="swap" title="Prohodit barvy (X)">⇄</button>
+        </div>
+        <div id="palette"></div>
+      </div>
+      <div class="recent-label">Naposledy použité</div>
+      <div id="recent"></div>
+    </section>
+
+    <section class="panel" id="options">
+      <h3 id="toolName">Štětec</h3>
+      <div class="opt" data-tools="brush pencil eraser marker spray calligraphy line arrow rect rrect ellipse triangle star">
+        <label>Velikost <output id="sizeOut">6</output></label>
+        <input type="range" id="size" min="1" max="200" value="6">
+      </div>
+      <div class="opt" data-tools="brush pencil marker spray calligraphy line arrow rect rrect ellipse triangle star fill gradient text eraser">
+        <label>Průhlednost <output id="opacityOut">100</output> %</label>
+        <input type="range" id="opacity" min="1" max="100" value="100">
+      </div>
+      <div class="opt" data-tools="rect rrect ellipse triangle star">
+        <label>Výplň tvaru</label>
+        <select id="fillMode">
+          <option value="outline">Jen obrys</option>
+          <option value="filled">Vyplněný</option>
+          <option value="both">Obrys + výplň (sekundární)</option>
+        </select>
+      </div>
+      <div class="opt" data-tools="brush pencil eraser marker spray calligraphy line arrow rect rrect ellipse triangle star">
+        <label>Symetrie</label>
+        <select id="symmetry">
+          <option value="none">Vypnuto</option>
+          <option value="h">Vodorovná (zrcadlo)</option>
+          <option value="v">Svislá (zrcadlo)</option>
+          <option value="both">Čtyřnásobná</option>
+        </select>
+      </div>
+      <div class="opt" data-tools="fill">
+        <label>Tolerance <output id="tolOut">32</output></label>
+        <input type="range" id="tol" min="0" max="128" value="32">
+      </div>
+      <div class="opt" data-tools="text">
+        <label>Písmo</label>
+        <select id="fontFamily">
+          <option>Segoe UI</option><option>Arial</option><option>Times New Roman</option>
+          <option>Georgia</option><option>Courier New</option><option>Comic Sans MS</option>
+          <option>Impact</option><option>Verdana</option>
+        </select>
+        <div class="row">
+          <label class="inline">Velikost <input type="number" id="fontSize" min="6" max="400" value="32"></label>
+          <label class="check"><input type="checkbox" id="fontBold"> <b>B</b></label>
+          <label class="check"><input type="checkbox" id="fontItalic"> <i>I</i></label>
+        </div>
+      </div>
+      <p class="hint" id="toolHint"></p>
+    </section>
+
+    <section class="panel layers-panel">
+      <h3>Vrstvy
+        <span class="layer-btns">
+          <button id="lAdd" title="Nová vrstva">＋</button>
+          <button id="lDup" title="Duplikovat vrstvu">⧉</button>
+          <button id="lUp" title="Posunout nahoru">↑</button>
+          <button id="lDown" title="Posunout dolů">↓</button>
+          <button id="lMerge" title="Sloučit s vrstvou pod">⤓</button>
+          <button id="lDel" title="Smazat vrstvu">🗑</button>
+        </span>
+      </h3>
+      <div class="opt">
+        <label>Průhlednost vrstvy <output id="layerOpOut">100</output> %</label>
+        <input type="range" id="layerOp" min="0" max="100" value="100">
+      </div>
+      <ul id="layerList"></ul>
+    </section>
+  </aside>
+</div>
+
+<footer id="status">
+  <span id="stPos">–</span>
+  <span id="stSel"></span>
+  <span class="spacer"></span>
+  <span id="stSize">1280 × 720 px</span>
+  <span id="stFile">Bez názvu</span>
+</footer>
+
+<div id="ring"></div>
+<div id="toast"></div>
+
+<dialog id="dlgNew">
+  <form method="dialog">
+    <h2>Nový obrázek</h2>
+    <label>Předvolba
+      <select id="newPreset">
+        <option value="1280x720">1280 × 720</option>
+        <option value="1920x1080">1920 × 1080 (Full HD)</option>
+        <option value="800x600">800 × 600</option>
+        <option value="1024x1024">1024 × 1024 (čtverec)</option>
+        <option value="512x512">512 × 512</option>
+        <option value="256x256">256 × 256 (ikona)</option>
+        <option value="2480x3508">A4 (300 DPI)</option>
+      </select>
+    </label>
+    <div class="row">
+      <label>Šířka <input type="number" id="newW" min="1" max="8000" value="1280"></label>
+      <label>Výška <input type="number" id="newH" min="1" max="8000" value="720"></label>
+    </div>
+    <label>Pozadí
+      <select id="newBg">
+        <option value="white">Bílé</option>
+        <option value="color2">Sekundární barva</option>
+        <option value="transparent">Průhledné</option>
+      </select>
+    </label>
+    <div class="dlg-actions">
+      <button value="cancel" class="btn">Zrušit</button>
+      <button value="ok" class="btn primary" id="newOk">Vytvořit</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgResize">
+  <form method="dialog">
+    <h2>Změnit velikost</h2>
+    <div class="row">
+      <label>Šířka <input type="number" id="rsW" min="1" max="8000"></label>
+      <label>Výška <input type="number" id="rsH" min="1" max="8000"></label>
+    </div>
+    <label class="check"><input type="checkbox" id="rsLock" checked> Zachovat poměr stran</label>
+    <label>Režim
+      <select id="rsMode">
+        <option value="scale">Zmenšit/zvětšit obsah</option>
+        <option value="canvas">Změnit jen plátno (oříznout/rozšířit)</option>
+      </select>
+    </label>
+    <div class="dlg-actions">
+      <button value="cancel" class="btn">Zrušit</button>
+      <button value="ok" class="btn primary" id="rsOk">Použít</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog id="dlgHelp">
+  <form method="dialog">
+    <h2>Klávesové zkratky</h2>
+    <div class="help-grid">
+      <div><b>B</b> Štětec</div><div><b>P</b> Tužka (pixel)</div>
+      <div><b>E</b> Guma</div><div><b>M</b> Zvýrazňovač</div>
+      <div><b>A</b> Sprej</div><div><b>C</b> Kaligrafie</div>
+      <div><b>G</b> Vyplnit</div><div><b>D</b> Přechod</div>
+      <div><b>L</b> Čára</div><div><b>R</b> Obdélník</div>
+      <div><b>O</b> Elipsa</div><div><b>T</b> Text</div>
+      <div><b>I</b> Kapátko</div><div><b>S</b> Výběr</div>
+      <div><b>H</b> Posun plátna</div><div><b>X</b> Prohodit barvy</div>
+      <div><b>[ ]</b> Velikost štětce</div><div><b>Alt + klik</b> Kapátko</div>
+      <div><b>Shift</b> Rovné čáry / čtverec / kruh</div><div><b>Pravé tlačítko</b> Sekundární barva</div>
+      <div><b>Mezerník + tažení</b> Posun plátna</div><div><b>Ctrl + kolečko</b> Zoom</div>
+      <div><b>Ctrl+Z / Ctrl+Y</b> Zpět / Vpřed</div><div><b>Ctrl+S / O / N</b> Uložit / Otevřít / Nový</div>
+      <div><b>Ctrl+C / X / V</b> Kopírovat / Vyjmout / Vložit</div><div><b>Šipky</b> Posun výběru</div>
+    </div>
+    <div class="dlg-actions"><button value="ok" class="btn primary">Zavřít</button></div>
+  </form>
+</dialog>
+
+<input type="file" id="filePick" accept="image/*" hidden>
+
+<script src="icons.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
